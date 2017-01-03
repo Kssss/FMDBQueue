@@ -69,7 +69,7 @@
              *rollback =![db executeUpdate:@"insert into t_student (name,age) VALUES (?,?);",@"ADMIN",@100000];
              *rollback =![db executeUpdate:@"insert into t_student (name,age) VALUES (?,?);",@"ADMIN",@100001];
              //         *rollback =[db executeUpdate:@"insert into t_student (name,age33) VALUES (?,?);",@"ADMIN",@100002];
-             *rollback =![db executeUpdate:@"insert into t_student (name,age) VALUES (?,?);",@"ADMIN",@100003];
+             *rollback =![db executeUpdate:@"insert into t_student (name,age1) VALUES (?,?)",@"ADMIN",@100003];
              
              //         *rollback =[db executeUpdate:@"insert into t_student (name,aaaaa) VALUES (?,?);",@"ADMIN",@100000];
              //         *rollback =  [db executeUpdate:@"INSERT INTO myTable VALUES (?)",@1];
