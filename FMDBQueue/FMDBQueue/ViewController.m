@@ -8,7 +8,7 @@
 
 #import "ViewController.h"
 #import "FMDB.h"
-
+#define createQueue(queueName)     dispatch_queue_t que = dispatch_queue_create(queueName, DISPATCH_QUEUE_SERIAL);
 @interface ViewController ()
 {
     FMDatabaseQueue * _queue;
@@ -37,8 +37,13 @@
     [_queue inDatabase:^(FMDatabase *db) {
         //4.创表
 
-        BOOL result = [db executeUpdate:@"CREATE TABLE IF NOT EXISTS t_student (id INTEGER PRIMARY KEY AUTOINCREMENT,name text, age integer);"];
+        BOOL result = [db executeUpdate:@"CREATE TABLE IF NOT EXISTS t_student (id INTEGER PRIMARY KEY ,name text, age integer);"];
         if (result)
+        {
+            NSLog(@"创建表成功");
+        }
+        BOOL result2 = [db executeUpdate:@"CREATE TABLE IF NOT EXISTS t_address (id INTEGER PRIMARY KEY ,address text, name text);"];
+        if (result2)
         {
             NSLog(@"创建表成功");
         }
@@ -48,35 +53,50 @@
 }
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
-    for (int a = 0; a < 100; a ++) {
-        dispatch_async(dispatch_get_global_queue(0, 0), ^{
-            [_queue inDatabase:^(FMDatabase *db) {
-                //4.创表
-                
-                BOOL result = [db executeUpdate:@"insert into t_student (name,age) VALUES (?,?);",@"ADMIN",@(a)];
-                if (result)
-                {
-                    NSLog(@"%@--插入数据成功",[NSThread currentThread]);
-                }
-            }];
-        });
-    }
+    
 
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        //2.把任务包装到事务里
-        [_queue inTransaction:^(FMDatabase *db, BOOL *rollback)
-         {
-             *rollback =![db executeUpdate:@"insert into t_student (name,age) VALUES (?,?);",@"ADMIN",@100000];
-             *rollback =![db executeUpdate:@"insert into t_student (name,age) VALUES (?,?);",@"ADMIN",@100001];
-             //         *rollback =[db executeUpdate:@"insert into t_student (name,age33) VALUES (?,?);",@"ADMIN",@100002];
-             *rollback =![db executeUpdate:@"insert into t_student (name,age1) VALUES (?,?)",@"ADMIN",@100003];
-             
-             //         *rollback =[db executeUpdate:@"insert into t_student (name,aaaaa) VALUES (?,?);",@"ADMIN",@100000];
-             //         *rollback =  [db executeUpdate:@"INSERT INTO myTable VALUES (?)",@1];
-             
-         }];
+    createQueue("viewContrller");
+    dispatch_async(que, ^{
+        [_queue inDatabase:^(FMDatabase *db) {
+            //4.创表
+            
+            BOOL result = [db executeUpdate:@"insert or replace into t_student (id,name,age) VALUES (?,?,?);",@(arc4random() % 100000),@(arc4random() % 10000),@(arc4random() % 30)];
+            if (result)
+            {
+                NSLog(@"%@--插入数据成功",[NSThread currentThread]);
+            }
+        }];
     });
+    
+    Mydispatch_barrier_async(que, ^{
+        NSLog(@"2222");
+        dispatch_async(que, ^{
+          NSLog(@"3333");
+        });
+        
+       });
+//    dispatch_barrier_async(que, ^{
+//        //2.把任务包装到事务里
+//        [_queue inTransaction:^(FMDatabase *db, BOOL *rollback)
+//         {
+//             *rollback =![db executeUpdate:@"insert into t_student (name,age) VALUES (?,?);",@"ADMIN",@100000];
+//             *rollback =![db executeUpdate:@"insert into t_student (name,age) VALUES (?,?);",@"ADMIN",@100001];
+//             //         *rollback =[db executeUpdate:@"insert into t_student (name,age33) VALUES (?,?);",@"ADMIN",@100002];
+//             *rollback =![db executeUpdate:@"insert into t_student (name,age1) VALUES (?,?)",@"ADMIN",@100003];
+//             
+//             //         *rollback =[db executeUpdate:@"insert into t_student (name,aaaaa) VALUES (?,?);",@"ADMIN",@100000];
+//             //         *rollback =  [db executeUpdate:@"INSERT INTO myTable VALUES (?)",@1];
+//             
+//         }];
+//    });
+
 
 }
-
+void Mydispatch_barrier_async(dispatch_queue_t queue, void (^block)(void)){
+    NSLog(@"1111");
+    dispatch_async(queue, ^{
+        NSLog(@"3333");
+    });
+    block();
+}
 @end
